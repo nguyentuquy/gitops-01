@@ -12,29 +12,27 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20.11.1
-      - run: npm ci
-        working-directory: .
-      - run: npm run build --if-present
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Thực hiện parallel jobs cho npm install và build
+      - name: Install Dependencies and Build
+        run: |
+          npm ci
+          npm run build --if-present
         working-directory: .
 
-  test:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Running Tests
+      # Parallel job để chạy các tests
+      - name: Run Tests
         run: echo "Tests are running"
 
   docker:
     name: Build Docker image and push to repositories (with cache)
     runs-on: ubuntu-latest
-    needs: [build, test]
+    needs: build
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
@@ -49,11 +47,12 @@ jobs:
             quynt/gitops01:${{ github.sha }}
 
   update-manifest:
+    name: Update Deployment Manifest
     runs-on: ubuntu-latest
     needs: docker
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
         with:
           repository: nguyentuquy/gitops-infra
           ref: main
@@ -79,15 +78,4 @@ jobs:
           sed -i 's#quynt.*#quynt/gitops01:${{ github.sha }}#g' deployment.yaml
           git add deployment.yaml
           git commit -m "Updated image: quynt/gitops01:${{github.sha}}"
-          if [ ${{ github.event_name }} == 'push' ] && [ ${{ github.ref }} == 'refs/heads/main' ]; then
-            ref_branch='main'
-          elif [ ${{ github.event_name }} == 'push' ] && [ ${{ github.ref }} == 'refs/heads/dev' ]; then
-            ref_branch='dev'
-          elif [ ${{ github.event_name }} == 'push' ] && [ ${{ github.ref }} == 'refs/heads/test' ]; then
-            ref_branch='test'
-          elif [ ${{ github.event_name }} == 'push' ] && [ ${{ github.ref }} == 'refs/heads/qa' ]; then
-            ref_branch='qa'
-          else
-            ref_branch='dev'
-          fi
           git push origin $ref_branch
