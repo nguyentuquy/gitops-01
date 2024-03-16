@@ -61,8 +61,9 @@ jobs:
           git config --global user.name "quy1990"
       - name: Update Deployment Manifest
         run: |
-          commit_sha=${{ github.sha }}
           sed -i 's#quynt.*#quynt/gitops01:${commit_sha}#g' deployment.yaml
+          sed -i 's#quynt.*#quynt/gitops01:${{ github.sha }}#g' deployment.yaml
+
           git add deployment.yaml
           git commit -m "Update image to quynt/gitops01:${commit_sha}"
           git push origin main
