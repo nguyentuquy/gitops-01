@@ -15,7 +15,7 @@ function App() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Hello Quy test auto deploy 1
+          Hello Quy test auto deploy 2
         </a>
       </header>
     </div>
