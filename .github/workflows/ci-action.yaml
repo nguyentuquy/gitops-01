@@ -69,20 +69,32 @@ jobs:
 
   update-manifest-stage:
     runs-on: ubuntu-latest
-    needs: ['build-and-push-docker-image']
+    needs: ['build-and-push-docker-image']  # Assumes this job builds the image
+
     steps:
       - uses: actions/checkout@v3
         with:
-          repository: nguyentuquy/gitops-infra
-          ref: 'main'
-          token: ${{ secrets.GHA_TOKEN }}
-      - name: setup git config
+          repository: nguyentuquy/gitops-infra  # Fetches your repository
+          ref: 'main'                            # Fetches the main branch
+          token: ${{ secrets.GHA_TOKEN }}   # Replace with your token name
+
+      - name: Setup Git Config
         run: |
           git config --global user.email "nguyentuquynb@gmail.com"
           git config --global user.name "quy1990"
-          echo ${{ github.sha }}
-          sed -i "s#${{ github.actor }}.*#${{ github.actor }}/gitops01:${{ github.sha }}#g" deployment.yaml
-          git add -A
-          git commit -am "Update image for - ${{ github.sha }}"
-      - run: echo ${{ github }}
-      - run: git push origin master
+
+      - name: Update Deployment Manifest
+        run: |
+          # Get the commit SHA
+          commit_sha=${{ github.sha }}
+
+          # Update deployment.yaml with image and commit SHA
+          sed -i "s/image:.*$/image: ${{ secrets.DOCKERHUB_USERNAME }}/gitops01:${commit_sha}/g" deployment.yaml
+
+          # Stage changes
+          git add deployment.yaml
+
+          # Commit with a descriptive message
+          git commit -m "Update image to ${{ secrets.DOCKERHUB_USERNAME }}/gitops01:${commit_sha}"
+
+      - run: git push origin main  # Push changes to the main branch (consider using protected branches)
