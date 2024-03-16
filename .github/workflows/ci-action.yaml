@@ -61,7 +61,6 @@ jobs:
           git config --global user.name "quy1990"
       - name: Update Deployment Manifest
         run: |
-          sed -i 's#quynt.*#quynt/gitops01:${commit_sha}#g' deployment.yaml
           sed -i 's#quynt.*#quynt/gitops01:${{ github.sha }}#g' deployment.yaml
 
           git add deployment.yaml
