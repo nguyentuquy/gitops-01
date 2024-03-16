@@ -44,17 +44,6 @@ jobs:
           push: true
           tags: |
             quynt/gitops01:${{ github.sha }}
-  get-commit-message:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4  # Checkout the repository
-      - name: Get Latest Commit Message of nguyentuquy/gitops01
-        id: get-commit-message  # Store the message in a job output
-        run: |
-          git clone --depth=1 https://github.com/nguyentuquy/gitops01.git commit-message-repo
-          cd commit-message-repo
-          commit_message=$(git log -n1 --pretty=%B)
-          echo "::set-output name=commit_message::$commit_message"  # Export the message
 
   update-manifest:
     runs-on: ubuntu-latest
@@ -75,5 +64,5 @@ jobs:
           sed -i 's#quynt.*#quynt/gitops01:${{ github.sha }}#g' deployment.yaml
 
           git add deployment.yaml
-          git commit -m "Updated image: quynt/gitops01:${{github.sha}} with the message: ${{ steps.get-commit-message.outputs.commit_message }}"
+          git commit -m "Updated image: quynt/gitops01:${{github.sha}}"
           git push origin main
