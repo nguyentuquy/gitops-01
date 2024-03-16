@@ -89,7 +89,7 @@ jobs:
           commit_sha=${{ github.sha }}
 
           # Update deployment.yaml with image and commit SHA
-          sed -i "s/image:.*$/image: ${{ secrets.DOCKERHUB_USERNAME }}/gitops01:${commit_sha}/g" deployment.yaml
+          sed -i 's#quynt.*#quynt/gitops01:${{ github.sha }}#g' deployment.yaml
 
           # Stage changes
           git add deployment.yaml
