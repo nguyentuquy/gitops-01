@@ -64,5 +64,5 @@ jobs:
           sed -i 's#quynt.*#quynt/gitops01:${{ github.sha }}#g' deployment.yaml
 
           git add deployment.yaml
-          git commit -m "Update image to quynt/gitops01:${commit_sha}"
+          git commit -m "Update image to: quynt/gitops01:${{github.sha}}"
           git push origin main
