@@ -59,24 +59,16 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      - name: Login to Github Packages
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: quy1990
-          password: ${{ secrets.GHA_TOKEN }}
-
-      - name: Build image and push to Docker Hub and GitHub Container Registry
+      - name: Build image and push to Docker Hub
         uses: docker/build-push-action@v2
         with:
           # relative path to the place where source code with Dockerfile is located
           context: ./
+          push: true
+
           # Note: tags has to be all lower-case
           tags: |
-            quynt/gitops01:${{ github.sha }} 
-            ghcr.io/quynt/gitops01:${{ github.sha }}
-          # build on feature branches, push only on main branch
-          push: ${{ github.ref == 'refs/heads/master' }}
+            quynt/gitops01:${{ github.sha }}
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
