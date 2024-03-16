@@ -40,6 +40,14 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
+      - name: Cache Docker layers
+        id: cache
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
       - name: Build and push Docker image (with cache)
         uses: docker/build-push-action@v5
         with:
@@ -47,6 +55,8 @@ jobs:
           push: true
           tags: |
             quynt/gitops01:${{ github.sha }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
 
   update-manifest:
     runs-on: ubuntu-latest
