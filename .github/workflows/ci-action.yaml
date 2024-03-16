@@ -57,6 +57,10 @@ jobs:
           repository: nguyentuquy/gitops-infra
           ref: main
           token: ${{ secrets.GHA_TOKEN }}
+      - name: Setup Git Config
+        run: |
+          git config --global user.email "nguyentuquynb@gmail.com"
+          git config --global user.name "quy1990"
       - name: Update Deployment Manifest
         run: |
           commit_sha=${{ github.sha }}
