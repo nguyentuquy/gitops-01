@@ -37,11 +37,13 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
-      - name: Build and push Docker image
+      - name: Build and push Docker image with cache
         uses: docker/build-push-action@v5
         with:
           context: ./
-          push: true
+          push: ${{ ! needs.docker.outputs.is_cached }}  # Push only if not cached
+          cache-from: type=gha
+          cache-to: type=gha
           tags: |
             quynt/gitops01:${{ github.sha }}
 
