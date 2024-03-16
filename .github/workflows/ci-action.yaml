@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       # Thực hiện parallel jobs cho npm install và build
       - name: Install Dependencies and Build
@@ -32,7 +32,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
@@ -52,7 +52,7 @@ jobs:
     needs: docker
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: nguyentuquy/gitops-infra
           ref: main
