@@ -12,63 +12,42 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20.11.1
-      - run: npm ci
-        working-directory: .
-      - run: npm run build --if-present
-        working-directory: .
+      - uses: actions/checkout@v2
 
-  test:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Running Tests
-        run: echo "Tests are running"
+      # Set up Docker Buildx
+      - name: Set up Docker Buildx
+        run: |
+          docker buildx create --use --name mybuilder
+          docker buildx inspect --bootstrap
 
-  docker:
-    name: Build Docker image and push to repositories (with cache)
-    runs-on: ubuntu-latest
-    needs: [build, test]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USER }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-      - name: Cache Docker layers
-        id: cache
-        uses: actions/cache@v2
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-      - name: Build and push Docker image (with cache)
-        uses: docker/build-push-action@v5
-        with:
-          context: ./
-          push: true
-          tags: |
-            quynt/gitops01:${{ github.sha }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
+      # Build Docker image using Buildx with cache
+      - name: Build Docker image with Buildx
+        run: |
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --cache-from type=local,src=/tmp/.buildx-cache \
+            --cache-to type=local,dest=/tmp/.buildx-cache \
+            -t myimage:latest .
+      
+      # Push Docker image to repository
+      - name: Push Docker image
+        run: |
+          docker login -u ${{ secrets.DOCKERHUB_USER }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
+          docker push myimage:latest
 
   update-manifest:
     runs-on: ubuntu-latest
-    needs: docker
+    needs: build
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
         with:
           repository: nguyentuquy/gitops-infra
           ref: main
           token: ${{ secrets.GHA_TOKEN }}
-      - name: Setup Git Config
+
+      # Update Deployment Manifest
+      - name: Update Deployment Manifest
         run: |
           git config --global user.email "nguyentuquynb@gmail.com"
           git config --global user.name "quy1990"
@@ -84,20 +63,7 @@ jobs:
             ref_branch='dev'
           fi
           git checkout $ref_branch
-      - name: Update Deployment Manifest
-        run: |
           sed -i 's#quynt.*#quynt/gitops01:${{ github.sha }}#g' deployment.yaml
           git add deployment.yaml
           git commit -m "Updated image: quynt/gitops01:${{github.sha}}"
-          if [ ${{ github.event_name }} == 'push' ] && [ ${{ github.ref }} == 'refs/heads/main' ]; then
-            ref_branch='main'
-          elif [ ${{ github.event_name }} == 'push' ] && [ ${{ github.ref }} == 'refs/heads/dev' ]; then
-            ref_branch='dev'
-          elif [ ${{ github.event_name }} == 'push' ] && [ ${{ github.ref }} == 'refs/heads/test' ]; then
-            ref_branch='test'
-          elif [ ${{ github.event_name }} == 'push' ] && [ ${{ github.ref }} == 'refs/heads/qa' ]; then
-            ref_branch='qa'
-          else
-            ref_branch='dev'
-          fi
           git push origin $ref_branch
