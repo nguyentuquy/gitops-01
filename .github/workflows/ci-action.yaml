@@ -84,7 +84,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          repository: quy1990/gitops-infra
+          repository: nguyentuquy/gitops-infra
           ref: 'master'
           token: ${{ secrets.GHA_TOKEN }}
       - name: setup git config
