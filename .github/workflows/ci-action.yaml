@@ -62,6 +62,18 @@ jobs:
         run: |
           git config --global user.email "nguyentuquynb@gmail.com"
           git config --global user.name "quy1990"
+          if [ ${{ github.event_name }} == 'push' ] && [ ${{ github.ref }} == 'refs/heads/main' ]; then
+            ref_branch='main'
+          elif [ ${{ github.event_name }} == 'push' ] && [ ${{ github.ref }} == 'refs/heads/dev' ]; then
+            ref_branch='dev'
+          elif [ ${{ github.event_name }} == 'push' ] && [ ${{ github.ref }} == 'refs/heads/test' ]; then
+            ref_branch='test'
+          elif [ ${{ github.event_name }} == 'push' ] && [ ${{ github.ref }} == 'refs/heads/qa' ]; then
+            ref_branch='qa'
+          else
+            ref_branch='dev'
+          fi
+          git checkout $ref_branch
       - name: Update Deployment Manifest
         run: |
           sed -i 's#quynt.*#quynt/gitops01:${{ github.sha }}#g' deployment.yaml
